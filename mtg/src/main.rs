@@ -1,5 +1,6 @@
 use env_logger::{Builder, Env, Target};
 use std::fmt;
+use std::io;
 
 use log;
 
@@ -22,17 +23,31 @@ fn main() {
         creatures: vec![creature_1],
     };
     let cpu = Player {
-        name: "Antonio".to_string(),
+        name: "CPU".to_string(),
         creatures: vec![creature_2],
     };
-    log::info!("Turn of the player {}", user.name);
-    log::info!("Init combat");
-    let attacker = user.creatures[0].clone();
-    let blocker = cpu.creatures[0].clone();
-    log::info!("{} vs {}", attacker, blocker);
-    let new_attacker = get_creature_after_combat(&blocker, &attacker);
-    let new_blocker = get_creature_after_combat(&attacker, &blocker);
-    log::debug!("Result: {} and {}", new_attacker, new_blocker);
+    log::info!("Init game");
+    loop {
+        let player = user.clone();
+        log::info!("Turn of the player {}", player.name);
+        log::info!("Init combat");
+        log::info!("Do you want to attack? [y/N]");
+        let mut answer = String::new();
+        io::stdin()
+            .read_line(&mut answer)
+            .expect("Failed to read line");
+        answer = answer.trim().to_string();
+        let is_player_attacking = answer.to_lowercase() == "y".to_string();
+        if !is_player_attacking {
+            continue;
+        }
+        let attacker = user.creatures[0].clone();
+        let blocker = cpu.creatures[0].clone();
+        log::info!("{} vs {}", attacker, blocker);
+        let new_attacker = get_creature_after_combat(&blocker, &attacker);
+        let new_blocker = get_creature_after_combat(&attacker, &blocker);
+        log::debug!("Result: {} and {}", new_attacker, new_blocker);
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -42,7 +57,7 @@ struct Creature {
     toughness: i8,
 }
 
-#[derive(Debug)]
+#[derive(Clone)]
 struct Player {
     name: String,
     creatures: Vec<Creature>,
