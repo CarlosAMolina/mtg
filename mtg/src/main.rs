@@ -44,21 +44,27 @@ fn main() {
         // TODO if !is_player_attacking {
         // TODO    continue;
         // TODO}
-        let attacker = creatures_battlefield_user[0].clone();
-        let blocker = creatures_battlefield_cpu[0].clone();
+        let attacker = creatures_battlefield_user[0];
+        let blocker = creatures_battlefield_cpu[0];
         log::info!("{} vs {}", attacker, blocker);
-        let new_attacker = get_creature_after_combat(&blocker, &attacker);
-        let new_blocker = get_creature_after_combat(&attacker, &blocker);
+        let new_attacker = get_creature_after_combat(blocker, attacker);
+        let new_blocker = get_creature_after_combat(attacker, blocker);
         log::debug!("Result: {} and {}", new_attacker, new_blocker);
         if new_attacker.toughness <= 0 {
-            let index = creatures_battlefield_user.iter().position(|x| x.id == attacker.id).unwrap();
+            let index = creatures_battlefield_user
+                .iter()
+                .position(|x| x.id == attacker.id)
+                .unwrap();
             creatures_battlefield_user.remove(index);
-            graveyard_user.push(&attacker);
+            graveyard_user.push(attacker);
         }
         if new_blocker.toughness <= 0 {
-            let index = creatures_battlefield_cpu.iter().position(|x| x.id == blocker.id).unwrap();
+            let index = creatures_battlefield_cpu
+                .iter()
+                .position(|x| x.id == blocker.id)
+                .unwrap();
             creatures_battlefield_cpu.remove(index);
-            graveyard_cpu.push(&blocker);
+            graveyard_cpu.push(blocker);
         }
         log::debug!(
             "Battlefield {} ({}): {:?}",
@@ -85,18 +91,26 @@ fn main() {
             graveyard_cpu
         );
         turn_count += 1;
-        break; // TODO rm
+        if user.life <= 0 {
+            log::info!("User {} wins!", user.name);
+            break;
+        }
+        if cpu.life <= 0 {
+            log::info!("User {} wins!", cpu.name);
+            break;
+        }
     }
 }
 
 #[derive(Clone)]
 struct Player {
+    life: u8,
     name: &'static str,
 }
 
 impl Player {
     fn new(name: &'static str) -> Self {
-        Player { name }
+        Player { life: 20, name }
     }
 }
 
@@ -145,7 +159,11 @@ impl Card for Creature {
 
 impl fmt::Display for Creature {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?} {}({}, {})", self.id, self.name, self.power, self.toughness)
+        write!(
+            f,
+            "{:?} {}({}, {})",
+            self.id, self.name, self.power, self.toughness
+        )
     }
 }
 
