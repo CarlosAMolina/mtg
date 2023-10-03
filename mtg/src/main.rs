@@ -9,14 +9,24 @@ fn main() {
     Builder::from_env(Env::default().default_filter_or("debug"))
         .target(Target::Stdout)
         .init();
-    let creature_1 = Creature::new("Rat", 2, 2);
-    let creature_2 = Creature::new("Small Rat", 2, 1);
-    let mut graveyard_user: Vec<&dyn Card> = vec![];
-    let mut graveyard_cpu: Vec<&dyn Card> = vec![];
-    let creatures_user = vec![creature_1];
-    let creatures_cpu = vec![creature_2];
     let user = Player::new("Carlos");
     let cpu = Player::new("CPU");
+    let mut cards_user: Vec<&dyn Card> = vec![];
+    let mut cards_cpu: Vec<&dyn Card> = vec![];
+    let mut creatures_hand_user: Vec<&Creature> = vec![];
+    let mut creatures_hand_cpu: Vec<&Creature> = vec![];
+    let mut creatures_battlefield_user: Vec<&Creature> = vec![];
+    let mut creatures_battlefield_cpu: Vec<&Creature> = vec![];
+    let mut graveyard_user: Vec<&dyn Card> = vec![];
+    let mut graveyard_cpu: Vec<&dyn Card> = vec![];
+    let creature_1 = Creature::new("Rat", 2, 2);
+    let creature_2 = Creature::new("Small Rat", 2, 1);
+    cards_user.push(&creature_1);
+    cards_cpu.push(&creature_2);
+    creatures_hand_user.push(&creature_1);
+    creatures_hand_cpu.push(&creature_2);
+    creatures_battlefield_user.push(&creature_1);
+    creatures_battlefield_cpu.push(&creature_2);
     log::info!("Init game. {} vs {}", user.name, cpu.name);
     loop {
         let player = user.clone();
@@ -32,8 +42,8 @@ fn main() {
         // TODO if !is_player_attacking {
         // TODO    continue;
         // TODO}
-        let attacker = creatures_user[0].clone();
-        let blocker = creatures_cpu[0].clone();
+        let attacker = creatures_battlefield_user[0].clone();
+        let blocker = creatures_battlefield_cpu[0].clone();
         log::info!("{} vs {}", attacker, blocker);
         let new_attacker = get_creature_after_combat(&blocker, &attacker);
         let new_blocker = get_creature_after_combat(&attacker, &blocker);
@@ -57,6 +67,17 @@ fn main() {
             graveyard_cpu
         );
         break; // TODO rm
+    }
+}
+
+#[derive(Clone)]
+struct Player {
+    name: &'static str,
+}
+
+impl Player {
+    fn new(name: &'static str) -> Self {
+        Player { name }
     }
 }
 
@@ -84,17 +105,6 @@ impl Creature {
             power,
             toughness,
         }
-    }
-}
-
-#[derive(Clone)]
-struct Player {
-    name: &'static str,
-}
-
-impl Player {
-    fn new(name: &'static str) -> Self {
-        Player { name }
     }
 }
 
