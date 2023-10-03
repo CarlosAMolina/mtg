@@ -1,3 +1,4 @@
+use core::fmt::Debug;
 use env_logger::{Builder, Env, Target};
 use std::fmt;
 use std::io;
@@ -10,8 +11,8 @@ fn main() {
         .init();
     let creature_1 = Creature::new("Rat", 2, 2);
     let creature_2 = Creature::new("Small Rat", 2, 1);
-    let mut graveyard_user: Vec<Box<dyn Card>> = vec![];
-    let mut graveyard_cpu: Vec<Box<dyn Card>> = vec![];
+    let mut graveyard_user: Vec<&dyn Card> = vec![];
+    let mut graveyard_cpu: Vec<&dyn Card> = vec![];
     let creatures_user = vec![creature_1];
     let creatures_cpu = vec![creature_2];
     let user = Player::new("Carlos");
@@ -22,17 +23,15 @@ fn main() {
         log::info!("Turn of the player {}", player.name);
         log::info!("Init combat");
         log::info!("Do you want to attack? [y/N]");
-        let mut answer = String::new();
-        io::stdin()
-            .read_line(&mut answer)
-            .expect("Failed to read line");
-        answer = answer.trim().to_string();
-        let is_player_attacking = answer.to_lowercase() == "y".to_string();
+        // TODO let mut answer = String::new();
+        // TODO io::stdin()
+        // TODO     .read_line(&mut answer)
+        // TODO     .expect("Failed to read line");
+        // TODO answer = answer.trim().to_string();
+        // TODO let is_player_attacking = answer.to_lowercase() == "y".to_string();
         // TODO if !is_player_attacking {
-        // TODO rm
-        if is_player_attacking {
-            continue;
-        }
+        // TODO    continue;
+        // TODO}
         let attacker = creatures_user[0].clone();
         let blocker = creatures_cpu[0].clone();
         log::info!("{} vs {}", attacker, blocker);
@@ -40,10 +39,10 @@ fn main() {
         let new_blocker = get_creature_after_combat(&attacker, &blocker);
         log::debug!("Result: {} and {}", new_attacker, new_blocker);
         if new_attacker.toughness <= 0 {
-            graveyard_user.push(Box::new(attacker));
+            graveyard_user.push(&attacker);
         }
         if new_blocker.toughness <= 0 {
-            graveyard_cpu.push(Box::new(blocker));
+            graveyard_cpu.push(&blocker);
         }
         log::debug!(
             "Graveyard {} ({}): {:?}",
@@ -57,10 +56,10 @@ fn main() {
             graveyard_cpu.len(),
             graveyard_cpu
         );
+        break; // TODO rm
     }
 }
 
-use core::fmt::Debug;
 impl Debug for dyn Card {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}", self.name())
