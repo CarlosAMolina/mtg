@@ -32,6 +32,11 @@ fn main() {
     loop {
         log::debug!("Init turn {}", turn_count);
         let player = user.clone();
+        let opponent = cpu.clone();
+        let mut creatures_battlefield_player = creatures_battlefield_user.clone();
+        let mut creatures_battlefield_opponent = creatures_battlefield_cpu.clone();
+        let mut graveyard_player = graveyard_user.clone();
+        let mut graveyard_opponent = graveyard_cpu.clone();
         log::info!("Turn of the player {}", player.name);
         log::info!("Init combat");
         log::info!("Do you want to attack? [y/N]");
@@ -44,60 +49,50 @@ fn main() {
         // TODO if !is_player_attacking {
         // TODO    continue;
         // TODO}
-        let attacker = creatures_battlefield_user[0];
-        let blocker = creatures_battlefield_cpu[0];
+        let attacker = creatures_battlefield_player[0];
+        let blocker = creatures_battlefield_opponent[0];
         log::info!("{} vs {}", attacker, blocker);
         let new_attacker = get_creature_after_combat(blocker, attacker);
         let new_blocker = get_creature_after_combat(attacker, blocker);
         log::debug!("Result attacker: {} -> {}", attacker, new_attacker);
         log::debug!("Result blocker: {} -> {}", blocker, new_blocker);
         if new_attacker.toughness <= 0 {
-            let index = creatures_battlefield_user
+            let index = creatures_battlefield_player
                 .iter()
                 .position(|x| x.id == attacker.id)
                 .unwrap();
-            creatures_battlefield_user.remove(index);
-            graveyard_user.push(attacker);
+            creatures_battlefield_player.remove(index);
+            graveyard_player.push(attacker);
         }
         if new_blocker.toughness <= 0 {
-            let index = creatures_battlefield_cpu
+            let index = creatures_battlefield_opponent
                 .iter()
                 .position(|x| x.id == blocker.id)
                 .unwrap();
-            creatures_battlefield_cpu.remove(index);
-            graveyard_cpu.push(blocker);
+            creatures_battlefield_opponent.remove(index);
+            graveyard_opponent.push(blocker);
         }
-        log::debug!(
-            "Battlefield {} ({}): {:?}",
-            player.name,
-            creatures_battlefield_user.len(),
-            creatures_battlefield_user
-        );
-        log::debug!(
-            "Battlefield {} ({}): {:?}",
-            cpu.name,
-            creatures_battlefield_cpu.len(),
-            creatures_battlefield_cpu
-        );
+        log_battlefield(&player, &creatures_battlefield_player);
+        log_battlefield(&opponent, &creatures_battlefield_opponent);
         log::debug!(
             "Graveyard {} ({}): {:?}",
             player.name,
-            graveyard_user.len(),
-            graveyard_user
+            graveyard_player.len(),
+            graveyard_player
         );
         log::debug!(
             "Graveyard {} ({}): {:?}",
-            cpu.name,
-            graveyard_cpu.len(),
-            graveyard_cpu
+            opponent.name,
+            graveyard_opponent.len(),
+            graveyard_opponent
         );
         turn_count += 1;
-        if user.life <= 0 {
-            log::info!("User {} wins!", user.name);
+        if player.life <= 0 {
+            log::info!("User {} wins!", player.name);
             break;
         }
-        if cpu.life <= 0 {
-            log::info!("User {} wins!", cpu.name);
+        if opponent.life <= 0 {
+            log::info!("User {} wins!", opponent.name);
             break;
         }
     }
@@ -176,4 +171,13 @@ fn get_creature_after_combat(attacker: &Creature, blocker: &Creature) -> Creatur
         power: blocker.power,
         toughness: new_toughness,
     }
+}
+
+fn log_battlefield(player: &Player, creatures: &Vec<&Creature>) {
+    log::debug!(
+        "Battlefield {} ({}): {:?}",
+        player.name,
+        creatures.len(),
+        creatures
+    );
 }
