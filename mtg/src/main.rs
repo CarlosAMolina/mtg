@@ -1,7 +1,8 @@
 use core::fmt::Debug;
 use env_logger::{Builder, Env, Target};
 use std::fmt;
-use std::io;
+use std::{thread, time};
+// TODO use std::io;
 
 use log;
 
@@ -15,18 +16,18 @@ fn main() {
     let mut cards_cpu: Vec<&dyn Card> = vec![];
     let mut creatures_hand_user: Vec<&Creature> = vec![];
     let mut creatures_hand_cpu: Vec<&Creature> = vec![];
-    let mut creatures_battlefield_user: Vec<&Creature> = vec![];
-    let mut creatures_battlefield_cpu: Vec<&Creature> = vec![];
-    let mut graveyard_user: Vec<&dyn Card> = vec![];
-    let mut graveyard_cpu: Vec<&dyn Card> = vec![];
+    let mut creatures_battlefield_user: Vec<Creature> = vec![];
+    let mut creatures_battlefield_cpu: Vec<Creature> = vec![];
+    let graveyard_user: Vec<&dyn Card> = vec![];
+    let graveyard_cpu: Vec<&dyn Card> = vec![];
     let creature_1 = Creature::new(CardId(1), "Rat", 2, 2);
     let creature_2 = Creature::new(CardId(2), "Small Rat", 2, 1);
     cards_user.push(&creature_1);
     cards_cpu.push(&creature_2);
     creatures_hand_user.push(&creature_1);
     creatures_hand_cpu.push(&creature_2);
-    creatures_battlefield_user.push(&creature_1);
-    creatures_battlefield_cpu.push(&creature_2);
+    creatures_battlefield_user.push(creature_1.clone());
+    creatures_battlefield_cpu.push(creature_2.clone());
     log::info!("Init game. {} vs {}", user.name, cpu.name);
     let mut turn_count = 0;
     loop {
@@ -49,11 +50,11 @@ fn main() {
         // TODO if !is_player_attacking {
         // TODO    continue;
         // TODO}
-        let attacker = creatures_battlefield_player[0];
-        let blocker = creatures_battlefield_opponent[0];
+        let attacker = creatures_battlefield_player[0].clone();
+        let blocker = creatures_battlefield_opponent[0].clone();
         log::info!("{} vs {}", attacker, blocker);
-        let new_attacker = get_creature_after_combat(blocker, attacker);
-        let new_blocker = get_creature_after_combat(attacker, blocker);
+        let new_attacker = get_creature_after_combat(&blocker, &attacker);
+        let new_blocker = get_creature_after_combat(&attacker, &blocker);
         log::debug!("Result attacker: {} -> {}", attacker, new_attacker);
         log::debug!("Result blocker: {} -> {}", blocker, new_blocker);
         if new_attacker.toughness <= 0 {
@@ -62,7 +63,7 @@ fn main() {
                 .position(|x| x.id == attacker.id)
                 .unwrap();
             creatures_battlefield_player.remove(index);
-            graveyard_player.push(attacker);
+            graveyard_player.push(&attacker);
         }
         if new_blocker.toughness <= 0 {
             let index = creatures_battlefield_opponent
@@ -70,7 +71,7 @@ fn main() {
                 .position(|x| x.id == blocker.id)
                 .unwrap();
             creatures_battlefield_opponent.remove(index);
-            graveyard_opponent.push(blocker);
+            graveyard_opponent.push(&blocker);
         }
         log_battlefield(&player, &creatures_battlefield_player);
         log_battlefield(&opponent, &creatures_battlefield_opponent);
@@ -80,12 +81,7 @@ fn main() {
             graveyard_player.len(),
             graveyard_player
         );
-        log::debug!(
-            "Graveyard {} ({}): {:?}",
-            opponent.name,
-            graveyard_opponent.len(),
-            graveyard_opponent
-        );
+        log_graveyard(&opponent, graveyard_opponent.clone()); // TODO rm clone?
         turn_count += 1;
         if player.life <= 0 {
             log::info!("User {} wins!", player.name);
@@ -95,6 +91,7 @@ fn main() {
             log::info!("User {} wins!", opponent.name);
             break;
         }
+        thread::sleep(time::Duration::from_secs(1))
     }
 }
 
@@ -173,11 +170,20 @@ fn get_creature_after_combat(attacker: &Creature, blocker: &Creature) -> Creatur
     }
 }
 
-fn log_battlefield(player: &Player, creatures: &Vec<&Creature>) {
+fn log_battlefield(player: &Player, creatures: &Vec<Creature>) {
     log::debug!(
         "Battlefield {} ({}): {:?}",
         player.name,
         creatures.len(),
         creatures
+    );
+}
+
+fn log_graveyard(player: &Player, graveyard: Vec<&dyn Card>) {
+    log::debug!(
+        "Graveyard {} ({}): {:?}",
+        player.name,
+        graveyard.len(),
+        graveyard,
     );
 }
