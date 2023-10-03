@@ -49,7 +49,8 @@ fn main() {
         log::info!("{} vs {}", attacker, blocker);
         let new_attacker = get_creature_after_combat(blocker, attacker);
         let new_blocker = get_creature_after_combat(attacker, blocker);
-        log::debug!("Result: {} and {}", new_attacker, new_blocker);
+        log::debug!("Result attacker: {} -> {}", attacker, new_attacker);
+        log::debug!("Result blocker: {} -> {}", blocker, new_blocker);
         if new_attacker.toughness <= 0 {
             let index = creatures_battlefield_user
                 .iter()
