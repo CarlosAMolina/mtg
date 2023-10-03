@@ -28,7 +28,9 @@ fn main() {
     creatures_battlefield_user.push(&creature_1);
     creatures_battlefield_cpu.push(&creature_2);
     log::info!("Init game. {} vs {}", user.name, cpu.name);
+    let mut turn_count = 0;
     loop {
+        log::debug!("Init turn {}", turn_count);
         let player = user.clone();
         log::info!("Turn of the player {}", player.name);
         log::info!("Init combat");
@@ -49,11 +51,27 @@ fn main() {
         let new_blocker = get_creature_after_combat(&attacker, &blocker);
         log::debug!("Result: {} and {}", new_attacker, new_blocker);
         if new_attacker.toughness <= 0 {
+            let index = creatures_battlefield_user.iter().position(|x| x.id == attacker.id).unwrap();
+            creatures_battlefield_user.remove(index);
             graveyard_user.push(&attacker);
         }
         if new_blocker.toughness <= 0 {
+            let index = creatures_battlefield_cpu.iter().position(|x| x.id == blocker.id).unwrap();
+            creatures_battlefield_cpu.remove(index);
             graveyard_cpu.push(&blocker);
         }
+        log::debug!(
+            "Battlefield {} ({}): {:?}",
+            player.name,
+            creatures_battlefield_user.len(),
+            creatures_battlefield_user
+        );
+        log::debug!(
+            "Battlefield {} ({}): {:?}",
+            cpu.name,
+            creatures_battlefield_cpu.len(),
+            creatures_battlefield_cpu
+        );
         log::debug!(
             "Graveyard {} ({}): {:?}",
             player.name,
@@ -66,6 +84,7 @@ fn main() {
             graveyard_cpu.len(),
             graveyard_cpu
         );
+        turn_count += 1;
         break; // TODO rm
     }
 }
@@ -81,7 +100,7 @@ impl Player {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 struct CardId(i32);
 
 trait Card {
