@@ -19,8 +19,8 @@ fn main() {
     let mut creatures_battlefield_cpu: Vec<&Creature> = vec![];
     let mut graveyard_user: Vec<&dyn Card> = vec![];
     let mut graveyard_cpu: Vec<&dyn Card> = vec![];
-    let creature_1 = Creature::new("Rat", 2, 2);
-    let creature_2 = Creature::new("Small Rat", 2, 1);
+    let creature_1 = Creature::new(CardId(1), "Rat", 2, 2);
+    let creature_2 = Creature::new(CardId(2), "Small Rat", 2, 1);
     cards_user.push(&creature_1);
     cards_cpu.push(&creature_2);
     creatures_hand_user.push(&creature_1);
@@ -81,26 +81,32 @@ impl Player {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+struct CardId(i32);
+
+trait Card {
+    fn id(&self) -> CardId;
+    fn name(&self) -> &'static str;
+}
+
 impl Debug for dyn Card {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "{}", self.name())
+        write!(f, "{:?}, name={}", self.id(), self.name())
     }
 }
 
 #[derive(Clone, Debug)]
 struct Creature {
+    id: CardId,
     name: &'static str,
     power: i8,
     toughness: i8,
 }
 
-trait Card {
-    fn name(&self) -> &'static str;
-}
-
 impl Creature {
-    fn new(name: &'static str, power: i8, toughness: i8) -> Self {
+    fn new(id: CardId, name: &'static str, power: i8, toughness: i8) -> Self {
         Creature {
+            id,
             name,
             power,
             toughness,
@@ -109,6 +115,10 @@ impl Creature {
 }
 
 impl Card for Creature {
+    fn id(&self) -> CardId {
+        self.id
+    }
+
     fn name(&self) -> &'static str {
         self.name
     }
@@ -116,13 +126,14 @@ impl Card for Creature {
 
 impl fmt::Display for Creature {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}({}, {})", self.name, self.power, self.toughness)
+        write!(f, "{:?} {}({}, {})", self.id, self.name, self.power, self.toughness)
     }
 }
 
 fn get_creature_after_combat(attacker: &Creature, blocker: &Creature) -> Creature {
     let new_toughness = blocker.toughness - attacker.power;
     Creature {
+        id: blocker.id.clone(),
         name: blocker.name.clone(),
         power: blocker.power,
         toughness: new_toughness,
